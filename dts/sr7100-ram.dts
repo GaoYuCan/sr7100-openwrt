@@ -1,0 +1,526 @@
+
+
+
+
+
+
+/dts-v1/;
+
+
+
+/ {
+ compatible = "zte,zx279133";
+ #address-cells = <2>;
+ #size-cells = <2>;
+ interrupt-parent = <&gic>;
+
+ osc25m: oscillator-25m {
+  compatible = "fixed-clock";
+  #clock-cells = <0>;
+  clock-frequency = <25000000>;
+ };
+
+
+ pll_lsp: clock-pll-lsp-2000m {
+  compatible = "fixed-clock";
+  #clock-cells = <0>;
+  clock-frequency = <2000000000>;
+  clock-output-names = "pll_lsp_2000m";
+ };
+
+ pll_1376m: clock-pll-1376m256 {
+  compatible = "fixed-clock";
+  #clock-cells = <0>;
+  clock-frequency = <1376256000>;
+  clock-output-names = "pll_1376m_clk";
+ };
+
+ pll_fpp: clock-pll-fpp-2500m {
+  compatible = "fixed-clock";
+  #clock-cells = <0>;
+  clock-frequency = <2500000000>;
+  clock-output-names = "pll_fpp_2500m_clk";
+ };
+
+
+ pll_cpu: clock-pll-cpu-2000m {
+  compatible = "fixed-clock";
+  #clock-cells = <0>;
+  clock-frequency = <2000000000>;
+  clock-output-names = "pll_2000m_clk";
+ };
+
+ cpus {
+  #address-cells = <2>;
+  #size-cells = <0>;
+
+  cpu@0 {
+   compatible = "arm,cortex-a53";
+   device_type = "cpu";
+   reg = <0x0 0x0>;
+   clocks = <&topcrm 16>;
+   enable-method = "psci";
+  };
+
+  cpu@1 {
+   compatible = "arm,cortex-a53";
+   device_type = "cpu";
+   reg = <0x0 0x1>;
+   clocks = <&topcrm 16>;
+   enable-method = "psci";
+  };
+ };
+
+ psci {
+  compatible = "arm,psci-0.2";
+  method = "smc";
+ };
+
+ gic: interrupt-controller@500000 {
+  compatible = "arm,gic-v3";
+  #address-cells = <0>;
+  #interrupt-cells = <3>;
+  interrupt-controller;
+  reg = <0x0 0x00500000 0x0 0x10000>,
+        <0x0 0x00540000 0x0 0x80000>;
+  interrupts = <1 9 4>;
+ };
+
+ timer {
+  compatible = "arm,armv8-timer";
+  interrupts = <1 13 ((((1 << (2)) - 1) << 8) |
+     8)>,
+        <1 14 ((((1 << (2)) - 1) << 8) |
+     8)>,
+        <1 11 ((((1 << (2)) - 1) << 8) |
+     8)>,
+        <1 10 ((((1 << (2)) - 1) << 8) |
+     8)>;
+ };
+
+ soc {
+  compatible = "simple-bus";
+  #address-cells = <2>;
+  #size-cells = <2>;
+  ranges;
+
+  topcrm: clock-controller@10e10000 {
+   compatible = "zte,zx279133-topcrm", "syscon";
+   reg = <0x0 0x10e10000 0x0 0x60>;
+   clocks = <&osc25m>, <&pll_lsp>, <&pll_1376m>, <&pll_fpp>,
+     <&pll_cpu>;
+   clock-names = "osc25m", "pll-lsp", "pll-1376m",
+          "pll-fpp", "pll-cpu";
+   #clock-cells = <1>;
+  };
+
+  top_reset: reset-controller@10e10060 {
+   compatible = "zte,zx296718-reset";
+   reg = <0x0 0x10e10060 0x0 0x4>;
+   #reset-cells = <1>;
+  };
+
+  local_reset: reset-controller@10e10070 {
+   compatible = "zte,zx296718-reset";
+   reg = <0x0 0x10e10070 0x0 0x8>;
+   #reset-cells = <1>;
+  };
+
+  topcrm_wdt: syscon@10e10208 {
+   compatible = "zte,zx279133-wdt-reset", "syscon";
+   reg = <0x0 0x10e10208 0x0 0x4>;
+  };
+
+  lsp0_clk: clock-controller@10d00000 {
+   compatible = "zte,zx279133-lsp-clk", "syscon";
+   reg = <0x0 0x10d00000 0x0 0x100>;
+   clocks = <&topcrm 2>,
+     <&topcrm 1>,
+     <&topcrm 0>,
+     <&topcrm 6>;
+   clock-names = "pclk", "wclk25", "wclk100", "spifc_wclk";
+   #clock-cells = <1>;
+   #reset-cells = <1>;
+  };
+
+  mdio0: mdio@14f01000 {
+   compatible = "zte,zx279133-mdio";
+   reg = <0 0x14f01000 0 0x1000>;
+   clocks = <&lsp1_clk 8>,
+     <&lsp1_clk 9>;
+   clock-names = "pclk", "wclk";
+   resets = <&lsp1_clk 0>;
+   #address-cells = <1>;
+   #size-cells = <0>;
+   status = "disabled";
+  };
+
+  mdio1: mdio@14f02000 {
+   compatible = "zte,zx279133-mdio";
+   reg = <0 0x14f02000 0 0x1000>;
+   clocks = <&lsp1_clk 10>,
+     <&lsp1_clk 11>;
+   clock-names = "pclk", "wclk";
+   resets = <&lsp1_clk 1>;
+   #address-cells = <1>;
+   #size-cells = <0>;
+   status = "disabled";
+  };
+
+  uart0: serial@10d0d000 {
+   compatible = "zte,zx279133-uart", "arm,pl011",
+         "arm,primecell";
+   arm,primecell-periphid = <0x001feffe>;
+   reg = <0x0 0x10d0d000 0x0 0x1000>;
+   interrupts = <0 31 4>;
+   clocks = <&lsp0_clk 1>,
+     <&lsp0_clk 0>;
+   clock-names = "uartclk", "apb_pclk";
+   resets = <&lsp0_clk 0>;
+   assigned-clocks = <&lsp0_clk 1>;
+   assigned-clock-parents =
+    <&topcrm 1>;
+   assigned-clock-rates = <25000000>;
+   status = "disabled";
+  };
+
+  pinctrl: pinctrl@10e20000 {
+   compatible = "zte,zx279133-pinctrl";
+   reg = <0x0 0x10e20000 0x0 0x1000>;
+
+   spifc_pins: spifc-pins {
+    function = "spifc";
+    pins = "p3-9", "p3-10", "p3-11", "p3-12",
+           "p4-0", "p4-1";
+   };
+  };
+
+  gpio0: gpio@10d10000 {
+   compatible = "zte,zx279133-gpio";
+   reg = <0x0 0x10d10000 0x0 0x40>;
+   interrupts = <0 34 4>;
+   gpio-controller;
+   #gpio-cells = <2>;
+   gpio-ranges = <&pinctrl 0 14 1>, <&pinctrl 1 0 14>,
+          <&pinctrl 15 15 1>;
+   ngpios = <16>;
+   interrupt-controller;
+   #address-cells = <0>;
+   #interrupt-cells = <2>;
+  };
+
+  gpio1: gpio@10d10040 {
+   compatible = "zte,zx279133-gpio";
+   reg = <0x0 0x10d10040 0x0 0x40>;
+   interrupts = <0 35 4>;
+   gpio-controller;
+   #gpio-cells = <2>;
+   gpio-ranges = <&pinctrl 0 16 9>, <&pinctrl 9 66 4>,
+          <&pinctrl 13 25 3>;
+   ngpios = <16>;
+   interrupt-controller;
+   #address-cells = <0>;
+   #interrupt-cells = <2>;
+  };
+
+  gpio2: gpio@10d10080 {
+   compatible = "zte,zx279133-gpio";
+   reg = <0x0 0x10d10080 0x0 0x40>;
+   interrupts = <0 36 4>;
+   gpio-controller;
+   #gpio-cells = <2>;
+   gpio-ranges = <&pinctrl 0 28 16>;
+   ngpios = <16>;
+   interrupt-controller;
+   #address-cells = <0>;
+   #interrupt-cells = <2>;
+  };
+
+  gpio3: gpio@10d100c0 {
+   compatible = "zte,zx279133-gpio";
+   reg = <0x0 0x10d100c0 0x0 0x40>;
+   interrupts = <0 37 4>;
+   gpio-controller;
+   #gpio-cells = <2>;
+   gpio-ranges = <&pinctrl 0 44 16>;
+   ngpios = <16>;
+   interrupt-controller;
+   #address-cells = <0>;
+   #interrupt-cells = <2>;
+  };
+
+  gpio4: gpio@10d10100 {
+   compatible = "zte,zx279133-gpio";
+   reg = <0x0 0x10d10100 0x0 0x40>;
+   interrupts = <0 38 4>;
+   gpio-controller;
+   #gpio-cells = <2>;
+   gpio-ranges = <&pinctrl 0 60 6>;
+   ngpios = <6>;
+   interrupt-controller;
+   #address-cells = <0>;
+   #interrupt-cells = <2>;
+  };
+
+  lsp1_clk: clock-controller@14f00000 {
+   compatible = "zte,zx279133-lsp1-clk";
+   reg = <0x0 0x14f00000 0x0 0x100>;
+   clocks = <&topcrm 4>,
+     <&topcrm 3>,
+     <&topcrm 11>,
+     <&topcrm 17>;
+   clock-names = "pclk", "wclk32k", "wclk25m", "wclk100m";
+   #clock-cells = <1>;
+   #reset-cells = <1>;
+  };
+
+  watchdog0: watchdog@14f09000 {
+   compatible = "zte,zx279133-watchdog";
+   reg = <0x0 0x14f09000 0x0 0x1000>;
+   clocks = <&lsp1_clk 0>,
+     <&lsp1_clk 1>;
+   clock-names = "pclk", "wdtclk";
+   zte,reset-controller = <&topcrm_wdt>;
+   zte,reset-offset = <0x0>;
+   zte,reset-mask = <0x10>;
+   zte,restart-watchdog;
+   timeout-sec = <10>;
+   status = "disabled";
+  };
+
+  watchdog1: watchdog@14f0a000 {
+   compatible = "zte,zx279133-watchdog";
+   reg = <0x0 0x14f0a000 0x0 0x1000>;
+   clocks = <&lsp1_clk 2>,
+     <&lsp1_clk 3>;
+   clock-names = "pclk", "wdtclk";
+   zte,reset-controller = <&topcrm_wdt>;
+   zte,reset-offset = <0x0>;
+   zte,reset-mask = <0x20>;
+   timeout-sec = <10>;
+   status = "disabled";
+  };
+
+ };
+};
+
+
+&pinctrl {
+ pcie0_pins: pcie0-pins { function = "pcie0"; pins = "p4-2", "p4-3"; };
+ pcie1_pins: pcie1-pins { function = "pcie1"; pins = "p4-4", "p4-5"; };
+};
+
+/ {
+ soc {
+  pcie_sys: syscon@10e00000 {
+   compatible = "zte,zx279133-pcie-sys", "syscon";
+   reg = <0 0x10e00000 0 0x100>;
+  };
+  pcie0: pcie@15200000 {
+   compatible = "zte,zx279133-pcie";
+   device_type = "pci";
+   #address-cells = <3>;
+   #size-cells = <2>;
+   #interrupt-cells = <1>;
+   linux,pci-domain = <0>;
+   bus-range = <0 255>;
+   num-lanes = <2>;
+   max-link-speed = <3>;
+   reg = <0 0x15200000 0 0x2000>,
+         <0 0x15204000 0 0x1000>,
+         <0 0x1f000000 0 0x400000>,
+         <0 0x2f800000 0 0x800000>,
+         <0 0x00600060 0 4>;
+   reg-names = "csr", "phy", "dbi", "config", "irq-mode";
+
+   ranges = <0x02000000 0 0x20000000 0 0x20000000 0 0x0f000000>;
+   dma-ranges = <0x42000000 0 0x80000000 0 0x80000000 0 0x40000000>;
+   dma-coherent;
+   clocks = <&topcrm 28>,
+     <&topcrm 29>;
+   clock-names = "pclk", "cci";
+   resets = <&top_reset 6>;
+   reset-names = "core";
+   zte,syscon = <&pcie_sys>;
+
+   interrupt-map-mask = <0 0 0 7>;
+   interrupt-map = <0 0 0 1 &gic 0 113 4>,
+     <0 0 0 2 &gic 0 112 4>,
+     <0 0 0 3 &gic 0 111 4>,
+     <0 0 0 4 &gic 0 110 4>;
+   pinctrl-names = "default";
+   pinctrl-0 = <&pcie0_pins &pcie1_pins>;
+   status = "disabled";
+  };
+ };
+};
+
+/ {
+ model = "ZTE ZX279133 F35SQA RAM development board";
+ compatible = "zte,zx279133-f35sqa", "zte,zx279133";
+ aliases {
+  serial0 = &uart0;
+  gpio0 = &gpio0;
+  gpio1 = &gpio1;
+  gpio2 = &gpio2;
+  gpio3 = &gpio3;
+  gpio4 = &gpio4;
+ };
+ chosen {
+  stdout-path = "serial0:115200n8";
+
+  bootargs = "console=ttyAMA0,115200 earlycon=zteuart,0x10d0d000 rdinit=/init clk_ignore_unused";
+ };
+ memory@80000000 {
+  device_type = "memory";
+  reg = <0 0x80000000 0 0x20000000>;
+ };
+ reserved-memory {
+  #address-cells = <2>;
+  #size-cells = <2>;
+  ranges;
+
+
+
+  vendor-high@9a600000 {
+   reg = <0 0x9a600000 0 0x05a00000>;
+   no-map;
+  };
+  vendor-low@85ff3000 {
+   reg = <0 0x85ff3000 0 0x0000a000>;
+   no-map;
+  };
+ };
+};
+
+&uart0 { status = "okay"; };
+
+
+
+
+&watchdog0 { status = "disabled"; };
+&watchdog1 { status = "disabled"; };
+
+&pcie0 {
+
+ vendor-power-gpios = <&gpio1 2 0>,
+        <&gpio2 5 0>,
+        <&gpio0 7 0>,
+        <&gpio0 8 0>,
+        <&gpio2 6 0>;
+ status = "disabled";
+};
+/ {
+ model = "ZTE SR7100 SMAC1 RAM laboratory";
+ reserved-memory {
+  /delete-node/ vendor-high@9a600000;
+  vendor-preserve@9a600000 { reg = <0 0x9a600000 0 0x00a00000>; no-map; };
+  bmu_lab: buffer@9b000000 { reg = <0 0x9b000000 0 0x00f00000>; no-map; };
+  se_lab: buffer@9bf00000 { reg = <0 0x9bf00000 0 0x01000000>; no-map; };
+  idm_lab: buffer@9cf00000 { reg = <0 0x9cf00000 0 0x00a00000>; no-map; };
+  vendor-preserve@9d900000 { reg = <0 0x9d900000 0 0x02700000>; no-map; };
+ };
+};
+&mdio0 {
+ status = "okay";
+ gephy_b: ethernet-phy@b { reg = <0xb>; };
+};
+&{/soc} {
+ idm_cci_lab: syscon@10e00078 {
+  compatible = "zte,zx279133-idm-cci", "syscon";
+  reg = <0 0x10e00078 0 8>;
+ };
+ pon_route_lab: syscon@17000080 {
+  compatible = "zte,zx279133-pon-route", "syscon";
+  reg = <0 0x17000080 0 4>;
+ };
+ ethernet@19000000 {
+  compatible = "zte,sr7100-nppt-smac1-lab";
+  reg = <0 0x19000000 0 0x1000000>, <0 0x18000000 0 0x1000000>;
+  reg-names = "nppt", "pps";
+  interrupts = <0 5 4>,
+        <0 1 4>,
+        <0 2 4>,
+        <0 3 4>,
+        <0 4 4>;
+  interrupt-names = "nppt", "rx", "idm", "buffer-release", "local-test";
+  clocks = <&topcrm 22>,
+    <&topcrm 23>,
+    <&topcrm 24>,
+    <&topcrm 25>,
+    <&topcrm 20>,
+    <&topcrm 26>;
+  clock-names = "idm-aclk", "tm-aclk", "pclk", "smac-wclk", "woe1-wclk", "mac-wclk";
+  zte,pon-route = <&pon_route_lab>;
+  zte,idm-cci = <&idm_cci_lab>;
+  memory-region = <&bmu_lab>, <&se_lab>, <&idm_lab>;
+  memory-region-names = "bmu", "se-hash", "idm";
+  phy-mode = "internal";
+  phy-handle = <&gephy_b>;
+  local-mac-address = [02 71 00 00 00 01];
+  status = "okay";
+ };
+};
+/ { model = "ZTE SR7100 NAND read-only RAM laboratory"; };
+&{/soc} {
+ spi@10d0f000 {
+  compatible = "zte,sr7100-sfc-readonly-lab";
+  reg = <0 0x10d0f000 0 0x1000>;
+  interrupts = <0 33 4>;
+  clocks = <&lsp0_clk 2>, <&lsp0_clk 3>;
+  clock-names = "pclk", "wclk";
+  resets = <&lsp0_clk 1>;
+  zte,spi-chipselect = <&lsp0_clk 0x2c 0x20000000>;
+  spi-max-frequency = <25000000>;
+  pinctrl-names = "default";
+  pinctrl-0 = <&spifc_pins>;
+  #address-cells = <1>;
+  #size-cells = <0>;
+  status = "okay";
+  flash@0 {
+   compatible = "spi-nand";
+   reg = <0>;
+   spi-max-frequency = <25000000>;
+   spi-rx-bus-width = <1>;
+   spi-tx-bus-width = <1>;
+   read-only;
+  };
+ };
+};
+/ { model = "ZTE SR7100 expanded Plugin candidate 26"; };
+&mdio0 {
+    gephy_a: ethernet-phy@a { reg = <0xa>; };
+    gephy_c: ethernet-phy@c { reg = <0xc>; };
+};
+&{/soc/ethernet@19000000} {
+    zte,smac-index = <1>;
+    phy-handle = <&gephy_b>;
+    wan-port { phy-mode = "internal"; phy-handle = <&gephy_a>; };
+    lan2-port { phy-mode = "internal"; phy-handle = <&gephy_c>; };
+};
+&pcie0 {
+    status = "okay";
+    pcie@0,0 {
+        device_type = "pci";
+        reg = <0 0 0 0 0>;
+        #address-cells = <3>;
+        #size-cells = <2>;
+        ranges;
+        wifi@0,0 {
+            compatible = "pci14c3,7992";
+            reg = <0 0 0 0 0>;
+            mediatek,eeprom-data = /incbin/("mt7992-eeprom.bin");
+        };
+    };
+};
+&{/soc/spi@10d0f000/flash@0} {
+    partitions {
+        compatible = "fixed-partitions";
+        #address-cells = <1>;
+        #size-cells = <1>;
+        partition@0 { label = "protected-before-rootfs"; reg = <0 0xf80000>; read-only; };
+        partition@f80000 { label = "rootfs"; reg = <0xf80000 0x2440000>; read-only; };
+        partition@33c0000 { label = "protected-slots"; reg = <0x33c0000 0x300000>; read-only; };
+        plugin_data: partition@36c0000 { label = "Plugin"; reg = <0x36c0000 0x4940000>; read-only; };
+    };
+};

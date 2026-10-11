@@ -1,0 +1,62 @@
+{
+  "files": [
+    {
+      "path": "downloads/openwrt-25.12.5-armsr-armv8-rootfs.tar.gz",
+      "sha256": "493336e176fdc1d6a377763e87a58c5854c24f51e83e586b209783e4bb648d42",
+      "size": 4510148,
+      "url": "https://downloads.openwrt.org/releases/25.12.5/targets/armsr/armv8/openwrt-25.12.5-armsr-armv8-rootfs.tar.gz"
+    },
+    {
+      "path": "downloads/sr1010-reference-only.itb",
+      "sha256": "522733e904edde206a3fb09325f4f794f1a84788f731c01c5ca5b24a6d0636f5",
+      "size": 5975860,
+      "url": "https://github.com/cnjn/linux-mainline-zte-zxslc-sr1010/blob/c551b8783f0e3553605702659d33d5ee6facda84/out/sr1010-zxdbg.itb"
+    },
+    {
+      "path": "downloads/linux-6.12.94.tar.xz",
+      "sha256": "e998a232b9418db3301cb58468e291a4f41d6ab8306029b30d991f56251dc8d2",
+      "size": 148301108,
+      "url": "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.12.94.tar.xz"
+    },
+    {
+      "path": "downloads/mt76-39c960c3.tar.gz",
+      "sha256": "ca24b84b9b419b7aeacb2324ea80be7be0f52ff7cc2e14420b59f5ac853178c0",
+      "size": 21877475,
+      "url": "https://codeload.github.com/openwrt/mt76/tar.gz/39c960c3ada558b4c2e7915772483d3731573d09"
+    },
+    {
+      "path": "downloads/backports-6.18.26.tar.zst",
+      "sha256": "2ad578c6cae22f192fefd44e1449725228d4109ee781998b41dcbae872554968",
+      "size": 12257871,
+      "url": "https://github.com/openwrt/backports/releases/download/backports-v6.18.26/backports-6.18.26.tar.zst"
+    },
+    {
+      "path": "downloads/wireless-regdb-2026.05.30.tar.xz",
+      "sha256": "8a27bfc081bafed8c24dd70fab0d96f098e5a0bfcd08d3da672595f225ab8993",
+      "size": 32044,
+      "url": "https://cdn.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2026.05.30.tar.xz"
+    }
+  ],
+  "repositories": [
+    {
+      "path": "sources/linux-zx279133",
+      "url": "https://github.com/cnjn/linux-mainline-zte-zxslc-sr1010.git",
+      "commit": "8aa6f460730e2583ddd7e809363b9a0ecb8335a8"
+    },
+    {
+      "path": "sources/sr1010-reference-build",
+      "url": "https://github.com/cnjn/linux-mainline-zte-zxslc-sr1010.git",
+      "commit": "c551b8783f0e3553605702659d33d5ee6facda84"
+    },
+    {
+      "path": "sources/immortalwrt-reference",
+      "url": "https://github.com/cnjn/immortalwrt.git",
+      "commit": "73fb84bb33e94d71d701cbf05499e22c2afba0d9"
+    },
+    {
+      "path": "sources/openwrt",
+      "url": "https://github.com/openwrt/openwrt.git",
+      "commit": "f0a60eee2fe051741c643ea6118718aae1ef17fb"
+    }
+  ]
+}

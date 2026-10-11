@@ -1,0 +1,7 @@
+build
+downloads
+private
+out
+.git
+*.log
+__pycache__

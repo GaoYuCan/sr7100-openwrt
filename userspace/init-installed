@@ -1,0 +1,41 @@
+#!/bin/sh
+set -eu
+BB=/bin/busybox
+fail() { echo "PERSISTENT_BOOT_FAILED: $*" > /dev/console; exec "$BB" sh; }
+"$BB" mount -t proc proc /proc
+"$BB" mount -t sysfs sysfs /sys
+"$BB" mount -t devtmpfs devtmpfs /dev
+"$BB" mkdir -p /rom /newroot /overlay
+[ "$("$BB" cat /sys/class/mtd/mtd1/name)" = rootfs ] || fail 'rootfs layout'
+[ "$("$BB" cat /sys/class/mtd/mtd3/name)" = Plugin ] || fail 'Plugin layout'
+"$BB" mount -t squashfs -o ro /dev/mtdblock1 /rom || fail 'rootfs mount'
+# No automatic initialization or erasure. A damaged/blank overlay stops here.
+/bin/sr7100-plugin-ubi attach || fail 'UBI attach; configurations not reformatted'
+"$BB" mount -t ubifs ubi0:rootfs_data /overlay || fail 'persistent overlay mount'
+[ "$("$BB" cat /overlay/.sr7100-layout 2>/dev/null)" = sr7100-plugin-expanded-v2 ] || fail 'unrecognized Plugin overlay; not reformatted'
+if [ -e /overlay/.reset-request ]; then
+ [ "$("$BB" cat /overlay/.reset-request)" = reset-v1 ] || fail 'invalid reset request'
+ if [ -e /overlay/upper.previous ]; then
+  # Resume a reset interrupted after renaming the previous upper directory.
+  [ ! -d /overlay/upper ] || [ -z "$("$BB" ls -A /overlay/upper)" ] || fail 'ambiguous reset state; previous configuration preserved'
+ else
+  [ ! -d /overlay/upper ] || "$BB" mv /overlay/upper /overlay/upper.previous
+ fi
+ if [ -d /overlay/work ] && [ ! -e /overlay/work.previous ]; then
+  "$BB" mv /overlay/work /overlay/work.previous
+ fi
+ "$BB" mkdir -p /overlay/upper /overlay/work
+ "$BB" sync
+ "$BB" rm /overlay/.reset-request
+ "$BB" sync
+fi
+"$BB" mkdir -p /overlay/upper /overlay/work
+"$BB" mount -t overlay overlay -o lowerdir=/rom,upperdir=/overlay/upper,workdir=/overlay/work /newroot || fail 'overlay mount'
+"$BB" mkdir -p /newroot/rom /newroot/overlay /newroot/proc /newroot/sys /newroot/dev
+"$BB" mount --move /rom /newroot/rom
+"$BB" mount --move /overlay /newroot/overlay
+"$BB" mount --move /proc /newroot/proc
+"$BB" mount --move /sys /newroot/sys
+"$BB" mount --move /dev /newroot/dev
+echo 'STORAGE_ROOT_PREPARED: squashfs NAND root, Plugin UBIFS overlay' > /newroot/dev/console
+exec "$BB" switch_root /newroot /sbin/init

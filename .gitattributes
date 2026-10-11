@@ -1,0 +1,2 @@
+# Patch context whitespace is part of the source reconstruction.
+*.patch -whitespace

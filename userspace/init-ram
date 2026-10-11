@@ -1,0 +1,26 @@
+#!/bin/sh
+# The controller and all exported MTDs in this first storage build are read-only.
+set -eu
+BB=/bin/busybox
+fail() {
+ echo "STORAGE_BOOT_FAILED: $*" > /dev/console
+ exec "$BB" sh
+}
+"$BB" mount -t proc proc /proc
+"$BB" mount -t sysfs sysfs /sys
+"$BB" mount -t devtmpfs devtmpfs /dev
+"$BB" mkdir -p /rom /newroot /overlay
+"$BB" mount -t tmpfs -o mode=0755,size=50% tmpfs /overlay
+"$BB" mkdir -p /overlay/upper /overlay/work
+[ -r /sys/class/mtd/mtd1/name ] || fail 'rootfs partition absent'
+[ "$("$BB" cat /sys/class/mtd/mtd1/name)" = rootfs ] || fail 'unexpected MTD layout'
+"$BB" mount -t squashfs -o ro,loop /rootfs.squashfs /rom || fail 'rootfs mount'
+"$BB" mount -t overlay overlay -o lowerdir=/rom,upperdir=/overlay/upper,workdir=/overlay/work /newroot || fail 'overlay mount'
+"$BB" mkdir -p /newroot/rom /newroot/overlay /newroot/proc /newroot/sys /newroot/dev
+"$BB" mount --move /rom /newroot/rom
+"$BB" mount --move /overlay /newroot/overlay
+"$BB" mount --move /proc /newroot/proc
+"$BB" mount --move /sys /newroot/sys
+"$BB" mount --move /dev /newroot/dev
+echo 'STORAGE_ROOT_PREPARED: squashfs RAM candidate root, temporary overlay' > /newroot/dev/console
+exec "$BB" switch_root /newroot /sbin/init

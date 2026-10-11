@@ -1,0 +1,70 @@
+{
+  "repo": "https://github.com/cnjn/linux-mainline-zte-zxslc-sr1010",
+  "commit": "8aa6f460730e2583ddd7e809363b9a0ecb8335a8",
+  "files": [
+    {
+      "path": "drivers/clk/clk-zx279133.c",
+      "reference_sha256": "59937e8473e800d95393ca70acb9cd24ec886fc62a354cd11bf1ae59ec38c783"
+    },
+    {
+      "path": "drivers/gpio/gpio-zx279133.c",
+      "reference_sha256": "43b6973295e3c023759fa7b6e0355397e5c9cfdaf0b35272ff1ec0c2297be68a"
+    },
+    {
+      "path": "drivers/pinctrl/pinctrl-zx279133.c",
+      "reference_sha256": "fcce3966763fea155c10eb79bc0fd66b5e4cc56c477083ebefe1e6b0eb2770c8"
+    },
+    {
+      "path": "drivers/watchdog/zx279133_wdt.c",
+      "reference_sha256": "ada98118f0f85186d5dcf35bad7b4f233d5544dc50b7de4baf808a57790958d3"
+    },
+    {
+      "path": "include/dt-bindings/clock/zte,zx279133-lsp.h",
+      "reference_sha256": "be53a356aa80a50ade337cb9c7ef58d38172bef9d168e0f6ab66c824e5e76903"
+    },
+    {
+      "path": "include/dt-bindings/clock/zte,zx279133-topcrm.h",
+      "reference_sha256": "fdb86cc58692deed3126a3ced62d28f757da57115bcfa94a4be7d360f5f9a493"
+    },
+    {
+      "path": "include/dt-bindings/reset/zte,zx279133-lsp.h",
+      "reference_sha256": "8531c8606a7d4f12743d35aea504ccbd9a20b4e7301ddab45cd7b97033b4b067"
+    },
+    {
+      "path": "include/dt-bindings/reset/zte,zx279133-topcrm.h",
+      "reference_sha256": "c453911a7dab79092cf6b063f82908ef82688677ac456cb08aeafa0a90348693"
+    },
+    {
+      "path": "Documentation/devicetree/bindings/clock/zte,zx279133-lsp-clk.yaml",
+      "reference_sha256": "f136d1eb08c897599af5ac3b80cdf0a7338111a505dc937c23d705911fc0319a"
+    },
+    {
+      "path": "Documentation/devicetree/bindings/clock/zte,zx279133-lsp1-clk.yaml",
+      "reference_sha256": "592bead9cd9683bd54ead9d85bf35ae0e5c04d563ff326721b4a273addedc830"
+    },
+    {
+      "path": "Documentation/devicetree/bindings/clock/zte,zx279133-topcrm.yaml",
+      "reference_sha256": "ae641469c931a4b1bdf738d09e23ce35a158ebcadf1a4f0c9d6af8adbaf79e69"
+    },
+    {
+      "path": "Documentation/devicetree/bindings/gpio/zte,zx279133-gpio.yaml",
+      "reference_sha256": "9894cf6ea25d394220e7de1448f9016dba64cb740b1b53503fc6c64a2ea015b1"
+    },
+    {
+      "path": "Documentation/devicetree/bindings/pinctrl/zte,zx279133-pinctrl.yaml",
+      "reference_sha256": "93498da9c0e37cd08ff9f886b87f9b19dd6db40a5384021c85994f16fae4abaa"
+    },
+    {
+      "path": "Documentation/devicetree/bindings/watchdog/zte,zx279133-watchdog.yaml",
+      "reference_sha256": "997f7f862728d85ae8bdbc838256466d6cbbf2d6dc3bd8d27c2d609be561e71b"
+    },
+    {
+      "path": "Documentation/devicetree/bindings/mfd/zte,zx279133-wdt-reset.yaml",
+      "reference_sha256": "3a2c84aa7014adbf4dfc232665bca09918426d3911ddc8af19f09919fa480ca0"
+    },
+    {
+      "path": "drivers/net/mdio/mdio-zx279133.c",
+      "reference_sha256": "076c22e5e76c5b515e90dcbac9e50431a51291151daaaa877422cdd36f373ea9"
+    }
+  ]
+}

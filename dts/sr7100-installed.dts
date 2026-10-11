@@ -1,0 +1,5 @@
+// SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
+#include "sr7100-ram.dts"
+&{/soc/spi@10d0f000} { compatible = "zte,sr7100-sfc-expanded-storage"; };
+&{/soc/spi@10d0f000/flash@0} { /delete-property/ read-only; };
+&plugin_data { /delete-property/ read-only; };

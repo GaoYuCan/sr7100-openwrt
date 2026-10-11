@@ -1,0 +1,11 @@
+#!/bin/sh
+# Request a configuration reset for next boot; never erase MTD or UBI.
+set -eu
+[ "${1:-}" = --yes ] || { echo 'Usage: sr7100-reset-config --yes (resets configuration on next reboot; keeps one previous configuration)' >&2; exit 2; }
+[ "$(cat /overlay/.sr7100-layout 2>/dev/null)" = sr7100-plugin-expanded-v2 ] || { echo 'A mounted persistent Plugin overlay is required.' >&2; exit 1; }
+[ ! -e /overlay/upper.previous ] && [ ! -e /overlay/work.previous ] || { echo 'Previous reset backup exists; save it before another reset.' >&2; exit 1; }
+printf '%s\n' reset-v1 > /overlay/.reset-request.new
+sync
+mv /overlay/.reset-request.new /overlay/.reset-request
+sync
+echo 'Configuration reset scheduled. Reboot to apply; previous configuration remains in /overlay/upper.previous.'

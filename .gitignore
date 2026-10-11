@@ -1,0 +1,11 @@
+/build/
+/downloads/
+/private/
+/out/
+*.pyc
+__pycache__/
+.DS_Store
+/*.log
+/esp32-uart-bridge/.pio/
+/esp32-uart-bridge/logs/
+/esp32-uart-bridge/sdkconfig.c3_bridge

@@ -1,0 +1,30 @@
+/dts-v1/;
+/ {
+ description = "SR7100 native NAND storage boot";
+ #address-cells = <1>;
+ images {
+  kernel {
+   description = "OpenWrt Linux 6.12.94 with NAND and squashfs";
+   data = /incbin/("Image.gz");
+   type = "kernel"; arch = "arm64"; os = "linux";
+   compression = "gzip"; load = <0x8b000000>; entry = <0x8b000000>;
+   hash { algo = "sha256"; };
+  };
+  ramdisk {
+   description = "Small NAND root bootstrap";
+   data = /incbin/("boot.cpio.gz");
+   type = "ramdisk"; arch = "arm64"; os = "linux"; compression = "none";
+   hash { algo = "sha256"; };
+  };
+  fdt {
+   description = "SR7100 A slot NAND root, MT7992 radios enabled";
+   data = /incbin/("board.dtb");
+   type = "flat_dt"; arch = "arm64"; compression = "none"; load = <0x87000000>;
+   hash { algo = "sha256"; };
+  };
+ };
+ configurations {
+  default = "storage";
+  storage { description = "SR7100 NAND system"; kernel = "kernel"; ramdisk = "ramdisk"; fdt = "fdt"; };
+ };
+};

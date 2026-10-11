@@ -1,0 +1,122 @@
+#!/bin/sh
+# Keep one hash-addressed compressed core on Plugin; immutable rootfs is fallback.
+# Normal updates cannot change executable bootloaders or the rootfs.
+set -eu
+volume=${SR7100_CORE_VOLUME:-/overlay}
+store=$volume/sr7100-core
+runtime=/tmp/etc/openclash/core/clash_meta
+valid_id() { [ "${#1}" = 64 ] && case "$1" in *[!0-9a-f]*) false;; *) true;; esac; }
+hash() { sha256sum "$1" | awk '{print $1}'; }
+guard() {
+ [ "$(cat "$volume/.sr7100-layout" 2>/dev/null)" = sr7100-plugin-expanded-v2 ] || { echo 'Expanded Plugin required' >&2; exit 1; }
+ grep -F " $volume ubifs rw" /proc/mounts >/dev/null || { echo 'Writable UBIFS volume required' >&2; exit 1; }
+ mkdir -p "$store"; chmod 700 "$store"
+}
+read_id() {
+ [ -f "$store/$1" ] || return 1
+ id=$(cat "$store/$1")
+ valid_id "$id" || return 1
+ printf '%s\n' "$id"
+}
+archive_ok() {
+ valid_id "$1" && [ -s "$store/$1.gz" ] || return 1
+ gzip -t "$store/$1.gz" || return 1
+ [ "$(gzip -dc "$store/$1.gz" | sha256sum | awk '{print $1}')" = "$1" ]
+}
+pointer() {
+ printf '%s\n' "$2" > "$store/.$1.$$"
+ sync
+ mv "$store/.$1.$$" "$store/$1"
+ sync
+}
+# Only retire archives after the committed current archive has been verified.
+# An interrupted update may leave two archives; install/restore/prune collects it.
+prune_current() {
+ kept=$(read_id current || true)
+ [ -n "$kept" ] && archive_ok "$kept" || return 1
+ rm -f "$store/previous"
+ sync
+ for file in "$store"/*.gz; do
+  [ -f "$file" ] || continue
+  name=${file##*/}; name=${name%.gz}
+  valid_id "$name" || continue
+  [ "$name" = "$kept" ] || rm -f "$file"
+ done
+ # Staging files cannot belong to another live update while our lock is held.
+ for file in "$store"/.*.gz "$store"/.current.* "$store"/.previous.*; do
+  [ ! -f "$file" ] || rm -f "$file"
+ done
+ sync
+}
+guard
+mkdir -p /tmp/lock
+exec 877> /tmp/lock/sr7100-core-store.lock
+flock -x 877
+case "${1:-}" in
+ install)
+  [ "$#" = 2 ] && [ -s "$2" ] && [ -x "$2" ] || exit 2
+  "$2" -v >/dev/null 2>&1 || { echo 'Core executable check failed' >&2; exit 1; }
+  config=$(uci -q get openclash.config.config_path || true)
+  [ -n "$config" ] && [ -s "$config" ] || { echo 'Active configuration missing' >&2; exit 1; }
+  "$2" -t -d /etc/openclash -f "$config" >/tmp/sr7100-core-validate.log 2>&1 || { echo 'New core rejects active configuration; old core retained' >&2; exit 1; }
+  next=$(hash "$2")
+  prune_current || true
+  if ! archive_ok "$next" 2>/dev/null; then
+   temp=/tmp/sr7100-core-$next.$$.gz
+   staged=$store/.$next.$$.gz
+   trap 'rm -f "$temp" "$staged"' EXIT HUP INT TERM
+   gzip -c "$2" > "$temp"
+   gzip -t "$temp"
+   [ "$(gzip -dc "$temp" | sha256sum | awk '{print $1}')" = "$next" ]
+   # Preserve current until the new archive and its pointer are durable.
+   needed=$(( ($(wc -c < "$temp") + 1023) / 1024 + 2048 ))
+   available=$(df -k "$volume" | awk 'END {print $4}')
+   [ "$available" -ge "$needed" ] || { echo 'Insufficient Plugin space; old core retained' >&2; exit 1; }
+   cp "$temp" "$staged"
+   sync
+   [ "$(hash "$staged")" = "$(hash "$temp")" ]
+   mv "$staged" "$store/$next.gz"
+   sync
+   rm -f "$temp"
+   trap - EXIT HUP INT TERM
+  fi
+  pointer current "$next"
+  prune_current
+  echo "CORE_PERSISTED $next"
+ ;;
+ restore)
+  mkdir -p "${runtime%/*}"
+  for slot in current; do
+   saved=$(read_id "$slot" || true)
+   [ -n "$saved" ] || continue
+   archive_ok "$saved" || continue
+   if [ -s "$runtime" ] && [ "$(hash "$runtime")" = "$saved" ]; then
+    prune_current
+    echo "CORE_ALREADY_CURRENT $saved"; exit 0
+   fi
+   temp=$runtime.restore.$$
+   if gzip -dc "$store/$saved.gz" > "$temp" && [ "$(hash "$temp")" = "$saved" ]; then
+    chmod 755 "$temp"
+    if "$temp" -v >/dev/null 2>&1; then
+     mv "$temp" "$runtime"
+     prune_current
+     echo "CORE_RESTORED $slot $saved"; exit 0
+    fi
+   fi
+   rm -f "$temp"
+  done
+  echo 'No valid persistent core; use immutable fallback' >&2
+  exit 1
+ ;;
+ prune)
+  prune_current || { echo "Current archive invalid; no archives removed" >&2; exit 1; }
+  echo CORE_PRUNED_CURRENT_ONLY
+ ;;
+ status)
+  for slot in current; do
+   saved=$(read_id "$slot" || true)
+   if [ -n "$saved" ] && archive_ok "$saved"; then echo "$slot $saved valid"; else echo "$slot unavailable"; fi
+  done
+ ;;
+ *) echo 'Usage: sr7100-core-store install BINARY | restore | prune | status' >&2; exit 2;;
+esac

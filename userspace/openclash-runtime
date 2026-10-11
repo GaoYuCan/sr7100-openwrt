@@ -1,0 +1,20 @@
+#!/bin/sh
+# Persistent compressed core first, immutable firmware core as last fallback.
+set -eu
+base=/usr/share/sr7100/openclash
+runtime=/tmp/etc/openclash
+mkdir -p "$runtime/core"
+if [ -x /usr/sbin/sr7100-core-store ]; then
+ /usr/sbin/sr7100-core-store restore >/tmp/sr7100-core-restore.log 2>&1 || true
+fi
+for item in core/clash_meta GeoSite.dat; do
+ [ -s "$runtime/$item" ] && continue
+ [ -f "$base/$item" ] || continue
+ cp "$base/$item" "$runtime/$item.new"
+ mv "$runtime/$item.new" "$runtime/$item"
+done
+seed=/etc/sr7100/openclash/Country.mmdb.gz
+if [ ! -s "$runtime/Country.mmdb" ] && [ -s "$seed" ]; then
+ gzip -dc "$seed" > "$runtime/Country.mmdb.new"
+ mv "$runtime/Country.mmdb.new" "$runtime/Country.mmdb"
+fi
