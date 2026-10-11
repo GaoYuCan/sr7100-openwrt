@@ -1,6 +1,6 @@
-# ZTE SR7100 OpenWrt 适配
+# 中兴巡天 BE5100 OpenWrt 适配
 
-中兴 SR7100（ZX279133 + MT7992）的社区适配源码，基于 **OpenWrt 25.12.5 / Linux 6.12.94**。开发记录见[移植过程](docs/porting-story.md)。
+中兴巡天 BE5100（ZX279133 + MT7992）的社区适配源码，基于 **OpenWrt 25.12.5 / Linux 6.12.94**。原厂系统标识为 `SR7100`，仓库名、代码及文件名沿用该标识。开发记录见[移植过程](docs/porting-story.md)。
 
 实机已经运行独立启动的 OpenWrt：WAN、LAN1、LAN2、双频 Wi-Fi、LuCI、OpenClash，以及 NAND 上的持久配置。当前布局保留两份原厂 U-Boot，把 B 系统载荷空间扩入 Plugin；Mihomo 在 Plugin 中只保存当前压缩核心，rootfs 留有原始核心兜底。
 
